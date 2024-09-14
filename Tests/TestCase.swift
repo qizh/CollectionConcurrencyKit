@@ -15,7 +15,7 @@ class TestCase: XCTestCase {
         collector = Collector()
     }
 
-    func verifyErrorThrown<T>(
+    func verifyErrorThrown<T: Sendable>(
         in file: StaticString = #file,
         at line: UInt = #line,
         from closure: (Error) async throws -> T

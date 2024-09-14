@@ -95,7 +95,7 @@ private extension TimingTests {
         try await Task.sleep(nanoseconds: UInt64(delayInterval * 1_000_000_000))
     }
 
-    func verifyExecutionTime<T>(
+    func verifyExecutionTime<T: Sendable>(
         _ expectation: TimeExpectation,
         in file: StaticString,
         at line: UInt,
@@ -115,7 +115,7 @@ private extension TimingTests {
         }
     }
 
-    func runSequentialTest<T>(
+    func runSequentialTest<T: Sendable>(
         in file: StaticString = #file,
         at line: UInt = #line,
         using closure: @escaping ([Int]) async throws -> T
@@ -128,7 +128,7 @@ private extension TimingTests {
         )
     }
 
-    func runConcurrentTest<T>(
+    func runConcurrentTest<T: Sendable>(
         in file: StaticString = #file,
         at line: UInt = #line,
         using closure: @escaping ([Int]) async throws -> T
