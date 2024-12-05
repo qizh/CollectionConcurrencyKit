@@ -36,7 +36,8 @@ final class MapTests: TestCase {
                 }
             }
 
-            XCTAssertEqual(collector.values, [0, 1, 2])
+            let values = await collector.values
+            XCTAssertEqual(values, [0, 1, 2])
         }
     }
 
