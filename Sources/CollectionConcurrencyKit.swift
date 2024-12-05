@@ -97,7 +97,8 @@ public extension Sequence where Element: Sendable {
     ///   the transformed values will match the original sequence.
     /// - throws: Rethrows any error thrown by the passed closure.
     func asyncMap<T>(
-        _ transform: (Element) async throws -> T
+        _ transform: (Element) async throws -> T,
+        isolation: isolated (any Actor)? = #isolation
     ) async rethrows -> [T] {
         var values = [T]()
 
@@ -190,7 +191,8 @@ public extension Sequence where Element: Sendable {
     ///   except for the values that were transformed into `nil`.
     /// - throws: Rethrows any error thrown by the passed closure.
     func asyncCompactMap<T>(
-        _ transform: (Element) async throws -> T?
+        _ transform: (Element) async throws -> T?,
+        isolation: isolated (any Actor)? = #isolation
     ) async rethrows -> [T] {
         var values = [T]()
 
@@ -292,7 +294,8 @@ public extension Sequence where Element: Sendable {
     ///   within the returned array.
     /// - throws: Rethrows any error thrown by the passed closure.
     func asyncFlatMap<T: Sequence>(
-        _ transform: (Element) async throws -> T
+        _ transform: (Element) async throws -> T,
+        isolation: isolated (any Actor)? = #isolation
     ) async rethrows -> [T.Element] {
         var values = [T.Element]()
 
