@@ -36,12 +36,14 @@ public extension Sequence where Element: Sendable {
     /// - parameter operation: The closure to run for each element.
     func concurrentForEach(
         withPriority priority: TaskPriority? = nil,
-        _ operation: @escaping @Sendable (Element) async -> Void
+        _ operation: @Sendable (Element) async -> Void
     ) async {
-        await withTaskGroup(of: Void.self) { group in
-            for element in self {
-                group.addTask(priority: priority) {
-                    await operation(element)
+        await withoutActuallyEscaping(operation) { escapableOperation in
+            await withTaskGroup(of: Void.self) { group in
+                for element in self {
+                    group.addTask(priority: priority) {
+                        await escapableOperation(element)
+                    }
                 }
             }
         }
@@ -62,17 +64,19 @@ public extension Sequence where Element: Sendable {
     /// - throws: Rethrows any error thrown by the passed closure.
     func concurrentForEach(
         withPriority priority: TaskPriority? = nil,
-        _ operation: @escaping @Sendable (Element) async throws -> Void
+        _ operation: @Sendable (Element) async throws -> Void
     ) async throws {
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            for element in self {
-                group.addTask(priority: priority) {
-                    try await operation(element)
+        try await withoutActuallyEscaping(operation) { escapableOperation in
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for element in self {
+                    group.addTask(priority: priority) {
+                        try await escapableOperation(element)
+                    }
                 }
-            }
 
-            // Propagate any errors thrown by the group's tasks:
-            for try await _ in group {}
+                // Propagate any errors thrown by the group's tasks:
+                for try await _ in group {}
+            }
         }
     }
 }
@@ -119,16 +123,18 @@ public extension Sequence where Element: Sendable {
     ///   the transformed values will match the original sequence.
     func concurrentMap<T: Sendable>(
         withPriority priority: TaskPriority? = nil,
-        _ transform: @escaping @Sendable (Element) async -> T
+        _ transform: @Sendable (Element) async -> T
     ) async -> [T] {
-        let tasks = map { element in
-            Task(priority: priority) {
-                await transform(element)
+        await withoutActuallyEscaping(transform) { escapableTransform in
+            let tasks = map { element in
+                Task(priority: priority) {
+                    await escapableTransform(element)
+                }
             }
-        }
 
-        return await tasks.asyncMap { task in
-            await task.value
+            return await tasks.asyncMap { task in
+                await task.value
+            }
         }
     }
 
@@ -150,16 +156,18 @@ public extension Sequence where Element: Sendable {
     /// - throws: Rethrows any error thrown by the passed closure.
     func concurrentMap<T: Sendable>(
         withPriority priority: TaskPriority? = nil,
-        _ transform: @escaping @Sendable (Element) async throws -> T
+        _ transform: @Sendable (Element) async throws -> T
     ) async throws -> [T] {
-        let tasks = map { element in
-            Task(priority: priority) {
-                try await transform(element)
+        try await withoutActuallyEscaping(transform) { escapableTransform in
+            let tasks = map { element in
+                Task(priority: priority) {
+                    try await escapableTransform(element)
+                }
             }
-        }
 
-        return try await tasks.asyncMap { task in
-            try await task.value
+            return try await tasks.asyncMap { task in
+                try await task.value
+            }
         }
     }
 }
@@ -214,16 +222,18 @@ public extension Sequence where Element: Sendable {
     ///   except for the values that were transformed into `nil`.
     func concurrentCompactMap<T: Sendable>(
         withPriority priority: TaskPriority? = nil,
-        _ transform: @escaping @Sendable (Element) async -> T?
+        _ transform: @Sendable (Element) async -> T?
     ) async -> [T] {
-        let tasks = map { element in
-            Task(priority: priority) {
-                await transform(element)
+        await withoutActuallyEscaping(transform) { escapableTransform in
+            let tasks = map { element in
+                Task(priority: priority) {
+                    await escapableTransform(element)
+                }
             }
-        }
 
-        return await tasks.asyncCompactMap { task in
-            await task.value
+            return await tasks.asyncCompactMap { task in
+                await task.value
+            }
         }
     }
 
@@ -247,16 +257,18 @@ public extension Sequence where Element: Sendable {
     /// - throws: Rethrows any error thrown by the passed closure.
     func concurrentCompactMap<T: Sendable>(
         withPriority priority: TaskPriority? = nil,
-        _ transform: @escaping @Sendable (Element) async throws -> T?
+        _ transform: @Sendable (Element) async throws -> T?
     ) async throws -> [T] {
-        let tasks = map { element in
-            Task(priority: priority) {
-                try await transform(element)
+        try await withoutActuallyEscaping(transform) { escapableTransform in
+            let tasks = map { element in
+                Task(priority: priority) {
+                    try await escapableTransform(element)
+                }
             }
-        }
 
-        return try await tasks.asyncCompactMap { task in
-            try await task.value
+            return try await tasks.asyncCompactMap { task in
+                try await task.value
+            }
         }
     }
 }
@@ -309,16 +321,18 @@ public extension Sequence where Element: Sendable {
     ///   within the returned array.
     func concurrentFlatMap<T: Sequence & Sendable>(
         withPriority priority: TaskPriority? = nil,
-        _ transform: @escaping @Sendable (Element) async -> T
+        _ transform: @Sendable (Element) async -> T
     ) async -> [T.Element] {
-        let tasks = map { element in
-            Task(priority: priority) {
-                await transform(element)
+        await withoutActuallyEscaping(transform) { escapableTransform in
+            let tasks = map { element in
+                Task(priority: priority) {
+                    await escapableTransform(element)
+                }
             }
-        }
 
-        return await tasks.asyncFlatMap { task in
-            await task.value
+            return await tasks.asyncFlatMap { task in
+                await task.value
+            }
         }
     }
 
@@ -343,16 +357,18 @@ public extension Sequence where Element: Sendable {
     /// - throws: Rethrows any error thrown by the passed closure.
     func concurrentFlatMap<T: Sequence & Sendable>(
         withPriority priority: TaskPriority? = nil,
-        _ transform: @escaping @Sendable (Element) async throws -> T
+        _ transform: @Sendable (Element) async throws -> T
     ) async throws -> [T.Element] {
-        let tasks = map { element in
-            Task(priority: priority) {
-                try await transform(element)
+        try await withoutActuallyEscaping(transform) { escapableTransform in
+            let tasks = map { element in
+                Task(priority: priority) {
+                    try await escapableTransform(element)
+                }
             }
-        }
 
-        return try await tasks.asyncFlatMap { task in
-            try await task.value
+            return try await tasks.asyncFlatMap { task in
+                try await task.value
+            }
         }
     }
 }
