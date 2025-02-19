@@ -15,8 +15,8 @@ class TestCase: XCTestCase {
         collector = Collector()
     }
 
-    func verifyErrorThrown<T: Sendable>(
-        in file: StaticString = #file,
+    func verifyErrorThrown<T>(
+        in file: StaticString = #filePath,
         at line: UInt = #line,
         from closure: (Error) async throws -> T
     ) async {
@@ -34,7 +34,7 @@ class TestCase: XCTestCase {
 
     func runAsyncTest(
         named testName: String = #function,
-        in file: StaticString = #file,
+        in file: StaticString = #filePath,
         at line: UInt = #line,
         withTimeout timeout: TimeInterval = 10,
         test: @escaping ([Int], Collector) async throws -> Void
@@ -64,50 +64,39 @@ class TestCase: XCTestCase {
 
 extension TestCase {
     // Note: This is not an actor because we want it to execute concurrently
-    class Collector {
+    actor Collector {
         var values = [Int]()
-        private let queue = DispatchQueue(label: "Collector")
 
-        func collect(_ value: Int) async {
-            await withCheckedContinuation { continuation in
-                queue.async {
-                    self.values.append(value)
-                    continuation.resume()
-                }
-            } as Void
+        func collect(_ value: Int) {
+            values.append(value)
         }
 
-        func collectAndTransform(_ value: Int) async -> String {
-            await collect(value)
+        func collectAndTransform(_ value: Int) -> String {
+            collect(value)
             return String(value)
         }
 
-        func collectAndDuplicate(_ value: Int) async -> [Int] {
-            await collect(value)
+        func collectAndDuplicate(_ value: Int) -> [Int] {
+            collect(value)
             return [value, value]
         }
 
         func tryCollect(
             _ value: Int,
             throwError error: Error? = nil
-        ) async throws {
-            try await withCheckedThrowingContinuation { continuation in
-                queue.async {
-                    if let error = error {
-                        return continuation.resume(throwing: error)
-                    }
-
-                    self.values.append(value)
-                    continuation.resume()
-                }
-            } as Void
+        ) throws {
+            if let error {
+                throw error
+            }
+            
+            values.append(value)
         }
 
         func tryCollectAndTransform(
             _ value: Int,
             throwError error: Error? = nil
         ) async throws -> String {
-            try await tryCollect(value, throwError: error)
+            try tryCollect(value, throwError: error)
             return String(value)
         }
 
@@ -115,7 +104,7 @@ extension TestCase {
             _ value: Int,
             throwError error: Error? = nil
         ) async throws -> [Int] {
-            try await tryCollect(value, throwError: error)
+            try tryCollect(value, throwError: error)
             return [value, value]
         }
     }

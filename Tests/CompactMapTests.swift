@@ -39,7 +39,8 @@ final class CompactMapTests: TestCase {
                 }
             }
 
-            XCTAssertEqual(collector.values, [0, 1])
+            let values = await collector.values
+            XCTAssertEqual(values, [0, 1])
         }
     }
 
@@ -67,7 +68,7 @@ final class CompactMapTests: TestCase {
         runAsyncTest { array, collector in
             await self.verifyErrorThrown { error in
                 try await array.concurrentCompactMap { int in
-                    try await self.collector.tryCollectAndTransform(
+                    try await collector.tryCollectAndTransform(
                         int,
                         throwError: int == 3 ? error : nil
                     )

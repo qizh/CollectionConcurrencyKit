@@ -11,14 +11,18 @@ final class ForEachTests: TestCase {
     func testNonThrowingAsyncForEach() {
         runAsyncTest { array, collector in
             await array.asyncForEach { await collector.collect($0) }
-            XCTAssertEqual(collector.values, array)
+            
+            let values = await collector.values
+            XCTAssertEqual(values, array)
         }
     }
 
     func testThrowingAsyncForEachThatDoesNotThrow() {
         runAsyncTest { array, collector in
             try await array.asyncForEach { try await collector.tryCollect($0) }
-            XCTAssertEqual(collector.values, array)
+
+            let values = await collector.values
+            XCTAssertEqual(values, array)
         }
     }
 
@@ -33,21 +37,26 @@ final class ForEachTests: TestCase {
                 }
             }
 
-            XCTAssertEqual(collector.values, [0, 1, 2])
+            let values = await collector.values
+            XCTAssertEqual(values, [0, 1, 2])
         }
     }
 
     func testNonThrowingConcurrentForEach() {
         runAsyncTest { array, collector in
             await array.concurrentForEach { await collector.collect($0) }
-            XCTAssertEqual(collector.values.sorted(), array)
+
+            let values = await collector.values
+            XCTAssertEqual(values.sorted(), array)
         }
     }
 
     func testThrowingConcurrentForEachThatDoesNotThrow() {
         runAsyncTest { array, collector in
             try await array.concurrentForEach { try await collector.tryCollect($0) }
-            XCTAssertEqual(collector.values.sorted(), array)
+
+            let values = await collector.values
+            XCTAssertEqual(values.sorted(), array)
         }
     }
 
