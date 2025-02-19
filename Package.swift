@@ -1,10 +1,4 @@
-// swift-tools-version:5.10
-
-/**
-*  CollectionConcurrencyKit
-*  Copyright (c) John Sundell 2021
-*  MIT license, see LICENSE.md file for details
-*/
+// swift-tools-version:6.0
 
 import PackageDescription
 
@@ -27,5 +21,6 @@ let package = Package(
             dependencies: ["CollectionConcurrencyKit"],
             path: "Tests"
         )
-    ]
+    ],
+	swiftLanguageModes: [.v5, .v6]
 )
