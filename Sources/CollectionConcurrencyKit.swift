@@ -356,3 +356,66 @@ public extension Sequence {
         }
     }
 }
+
+// MARK: - Filter
+
+public extension Sequence {
+    /// Filter the sequence into an array of new values using
+    /// an async predicate closure that returns booleans.
+    ///
+    /// The closure calls will be performed in order, by waiting for
+    /// each call to complete before proceeding with the next one. If
+    /// any of the closure calls throw an error, then the iteration
+    /// will be terminated and the error rethrown.
+    ///
+    /// - Parameter isIncluded: A closure that takes an element of the sequence as its argument and returns a Boolean value indicating whether the element should be included in the returned array.
+    ///
+    /// - Returns: An array of the elements that isIncluded allowed.
+    func asyncFilter(_ isIncluded: (Element) async throws -> Bool) async rethrows -> [Element] {
+        var result: [Element] = []
+        
+        for element in self where try await isIncluded(element) {
+            result.append(element)
+        }
+        
+        return result
+    }
+    
+    /// Filter the sequence into an array of new values using
+    /// an async predicate closure that returns booleans.
+    ///
+    /// - Parameters:
+    ///   - priority: Any specific `TaskPriority` to assign to
+    ///   the async tasks that will perform the closure calls. The
+    ///   default is `nil` (meaning that the system picks a priority).
+    ///   - isIncluded: A closure that takes an element of the
+    ///   sequence as its argument and returns a Boolean value indicating
+    ///   whether the element should be included in the returned array.
+    ///
+    /// - Returns: An array of the elements that isIncluded allowed.
+    func concurrentFilter(priority: TaskPriority? = nil, _ isIncluded: @escaping (Element) async throws -> Bool) async rethrows -> [Element] {
+        try await withThrowingTaskGroup { group in
+            let enumeration = self.enumerated()
+            
+            var count = 0
+            for (index, element) in enumeration {
+                count += 1
+                
+                group.addTask(priority: priority) {
+                    try await (index, isIncluded(element))
+                }
+            }
+            
+            var indexedPredicate = Array(repeating: false, count: count)
+            for try await (index, shouldInclude) in group {
+                indexedPredicate[index] = shouldInclude
+            }
+            
+            var output = [Element]()
+            for (index, element) in enumeration where indexedPredicate[index] {
+                output.append(element)
+            }
+            return output
+        }
+    }
+}
