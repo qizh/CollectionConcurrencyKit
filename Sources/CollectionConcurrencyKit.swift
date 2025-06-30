@@ -404,7 +404,7 @@ public extension Sequence {
     /// an async predicate closure that returns booleans.
     ///
     /// - Parameters:
-    ///   - priority: Any specific `TaskPriority` to assign to
+    ///   - withPriority: Any specific `TaskPriority` to assign to
     ///   the async tasks that will perform the closure calls. The
     ///   default is `nil` (meaning that the system picks a priority).
     ///   - isIncluded: A closure that takes an element of the
@@ -412,29 +412,34 @@ public extension Sequence {
     ///   whether the element should be included in the returned array.
     ///
     /// - Returns: An array of the elements that isIncluded allowed.
-    func concurrentFilter(priority: TaskPriority? = nil, _ isIncluded: @escaping (Element) async throws -> Bool) async rethrows -> [Element] {
-        try await withThrowingTaskGroup { group in
-            let enumeration = self.enumerated()
-            
-            var count = 0
-            for (index, element) in enumeration {
-                count += 1
-                
-                group.addTask(priority: priority) {
-                    try await (index, isIncluded(element))
-                }
-            }
-            
-            var indexedPredicate = Array(repeating: false, count: count)
-            for try await (index, shouldInclude) in group {
-                indexedPredicate[index] = shouldInclude
-            }
-            
-            var output = [Element]()
-            for (index, element) in enumeration where indexedPredicate[index] {
-                output.append(element)
-            }
-            return output
-        }
+	func concurrentFilter(
+		withPriority priority: TaskPriority? = nil,
+		_ isIncluded: @Sendable (Element) async throws -> Bool
+	) async rethrows -> [Element] {
+		try await withoutActuallyEscaping(isIncluded) { escapableIsIncluded in
+			try await withThrowingTaskGroup { group in
+				let enumeration = self.enumerated()
+				
+				var count = 0
+				for (index, element) in enumeration {
+					count += 1
+					
+					group.addTask(priority: priority) {
+						try await (index, escapableIsIncluded(element))
+					}
+				}
+				
+				var indexedPredicate = Array(repeating: false, count: count)
+				for try await (index, shouldInclude) in group {
+					indexedPredicate[index] = shouldInclude
+				}
+				
+				var output = [Element]()
+				for (index, element) in enumeration where indexedPredicate[index] {
+					output.append(element)
+				}
+				return output
+			}
+		}
     }
 }
