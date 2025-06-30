@@ -6,7 +6,7 @@
 
 // MARK: - ForEach
 
-public extension Sequence where Element: Sendable {
+public extension Sequence where Element: Sendable, Self: SendableMetatype {
     /// Run an async closure for each element within the sequence.
     ///
     /// The closure calls will be performed in order, by waiting for
@@ -83,7 +83,7 @@ public extension Sequence where Element: Sendable {
 
 // MARK: - Map
 
-public extension Sequence where Element: Sendable {
+public extension Sequence where Element: Sendable, Self: SendableMetatype {
     /// Transform the sequence into an array of new values using
     /// an async closure.
     ///
@@ -175,7 +175,7 @@ public extension Sequence where Element: Sendable {
 
 // MARK: - CompactMap
 
-public extension Sequence where Element: Sendable {
+public extension Sequence where Element: Sendable, Self: SendableMetatype {
     /// Transform the sequence into an array of new values using
     /// an async closure that returns optional values. Only the
     /// non-`nil` return values will be included in the new array.
@@ -277,7 +277,7 @@ public extension Sequence where Element: Sendable {
 
 // MARK: - FlatMap
 
-public extension Sequence where Element: Sendable {
+public extension Sequence where Element: Sendable, Self: SendableMetatype {
     /// Transform the sequence into an array of new values using
     /// an async closure that returns sequences. The returned sequences
     /// will be flattened into the array returned from this function.
@@ -378,7 +378,7 @@ public extension Sequence where Element: Sendable {
 
 // MARK: - Filter
 
-public extension Sequence {
+public extension Sequence where Element: Sendable, Self: SendableMetatype {
     /// Filter the sequence into an array of new values using
     /// an async predicate closure that returns booleans.
     ///
@@ -443,3 +443,4 @@ public extension Sequence {
 		}
     }
 }
+
