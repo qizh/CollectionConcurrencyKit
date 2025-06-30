@@ -4,12 +4,18 @@ import PackageDescription
 
 let package = Package(
     name: "CollectionConcurrencyKit",
-    platforms: [.iOS(.v13), .macOS(.v10_15), .watchOS(.v6), .tvOS(.v13)],
+	platforms: [
+		.iOS("17.5"),
+		.macOS(.v14),
+		.macCatalyst(.v14),
+		.visionOS(.v1),
+		.watchOS(.v7),
+	],
     products: [
         .library(
             name: "CollectionConcurrencyKit",
             targets: ["CollectionConcurrencyKit"]
-        )
+		),
     ],
     targets: [
         .target(
@@ -20,7 +26,10 @@ let package = Package(
             name: "CollectionConcurrencyKitTests",
             dependencies: ["CollectionConcurrencyKit"],
             path: "Tests"
-        )
+        ),
     ],
-	swiftLanguageModes: [.v5, .v6]
+	swiftLanguageModes: [
+		.v5,
+		.v6,
+	]
 )
