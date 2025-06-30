@@ -75,11 +75,13 @@ CollectionConcurrencyKit adds the following APIs to all `Sequence`-conforming Sw
     - `asyncMap`
     - `asyncCompactMap`
     - `asyncFlatMap`
+    - `asyncFilter`
 - Concurrent variants that perform each of their operations in parallel (while still maintaining a predictable output order):
     - `concurrentForEach`
     - `concurrentMap`
     - `concurrentCompactMap`
     - `concurrentFlatMap`
+    - `concurrentFilter`
 
 Both throwing and non-throwing versions of all of the above APIs are included. To learn more about `map`, `flatMap`, and `compactMap` in general, check out [this article](https://swiftbysundell.com/basics/map-flatmap-and-compactmap).
 
