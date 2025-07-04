@@ -4,6 +4,12 @@
 *  MIT license, see LICENSE.md file for details
 */
 
+/// Minimum changes required to make the code compilable using `Xcode 16.4` and `Swift 6.0`
+#if swift(<6.2)
+/// Equals to `Any` when Swift version is less than `6.2`
+public typealias SendableMetatype = Any
+#endif
+
 // MARK: - ForEach
 
 public extension Sequence where Element: Sendable, Self: SendableMetatype {
